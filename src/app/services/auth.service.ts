@@ -6,6 +6,9 @@ import { AuthResponse } from '../interfaces/auth-response';
 import { HttpClient } from '@angular/common/http';
 import { jwtDecode } from 'jwt-decode';
 import { RegisterRequest } from '../interfaces/register-request';
+import { UserDetail } from '../interfaces/user-detail';
+import { ResetPasswordRequest } from '../interfaces/reset-password-request';
+import { ChangePasswordRequest } from '../interfaces/change-password-request';
 @Injectable({
   providedIn: 'root',
 })
@@ -30,6 +33,19 @@ export class AuthService {
   register(data: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}account/register`, data);
   }
+  getDetail = (): Observable<UserDetail> =>
+    this.http.get<UserDetail>(`${this.apiUrl}account/detail`);
+
+  forgotPassword = (email: string): Observable<AuthResponse> =>
+    this.http.post<AuthResponse>(`${this.apiUrl}account/forgot-password`, {
+      email,
+    });
+
+  resetPassword = (data: ResetPasswordRequest): Observable<AuthResponse> =>
+    this.http.post<AuthResponse>(`${this.apiUrl}account/reset-password`, data);
+
+  changePassword = (data: ChangePasswordRequest): Observable<AuthResponse> =>
+    this.http.post<AuthResponse>(`${this.apiUrl}account/change-password`, data);
 
   getUserDetail = () => {
     const token = this.getToken();
@@ -60,10 +76,41 @@ export class AuthService {
     return isTokenExpired;
   }
 
-  logout = (): void => {
-    localStorage.removeItem(this.tokenKey);
+  
+
+ 
+  getRoles = (): string[] | null => {
+    const token = this.getToken();
+    if (!token) return null;
+
+    const decodedToken: any = jwtDecode(token);
+    return decodedToken.role || null;
   };
 
-  private getToken = (): string | null =>
-    localStorage.getItem(this.tokenKey) || '';
+  logout = (): void => {
+    localStorage.removeItem(this.userKey);
+  };
+  getAll = (): Observable<UserDetail[]> =>
+    this.http.get<UserDetail[]>(`${this.apiUrl}account`);
+
+  refreshToken = (data: {
+    email: string;
+    token: string;
+    refreshToken: string;
+  }): Observable<AuthResponse> =>
+    this.http.post<AuthResponse>(`${this.apiUrl}account/refresh-token`, data);
+
+  getToken = (): string | null => {
+    const user = localStorage.getItem(this.userKey);
+    if (!user) return null;
+    const userDetail: AuthResponse = JSON.parse(user);
+    return userDetail.token;
+  };
+
+  getRefreshToken = (): string | null => {
+    const user = localStorage.getItem(this.userKey);
+    if (!user) return null;
+    const userDetail: AuthResponse = JSON.parse(user);
+    return userDetail.refreshToken;
+  };
 }

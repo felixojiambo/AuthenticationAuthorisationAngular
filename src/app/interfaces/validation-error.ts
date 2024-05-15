@@ -1,5 +1,4 @@
 export interface ValidationError {
-    code: string;
-    description: string;
-  }
-  
+  code: string;
+  description: string;
+}
