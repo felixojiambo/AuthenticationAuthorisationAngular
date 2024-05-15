@@ -9,12 +9,13 @@ import { RegisterRequest } from '../interfaces/register-request';
 import { UserDetail } from '../interfaces/user-detail';
 import { ResetPasswordRequest } from '../interfaces/reset-password-request';
 import { ChangePasswordRequest } from '../interfaces/change-password-request';
+
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   apiUrl: string = environment.apiUrl;
-  private tokenKey = 'token';
+  private userKey = 'user';
 
   constructor(private http: HttpClient) {}
 
@@ -24,15 +25,17 @@ export class AuthService {
       .pipe(
         map((response) => {
           if (response.isSuccess) {
-            localStorage.setItem(this.tokenKey, response.token);
+            localStorage.setItem(this.userKey, JSON.stringify(response));
           }
           return response;
         })
       );
   }
+
   register(data: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}account/register`, data);
   }
+
   getDetail = (): Observable<UserDetail> =>
     this.http.get<UserDetail>(`${this.apiUrl}account/detail`);
 
@@ -64,7 +67,7 @@ export class AuthService {
   isLoggedIn = (): boolean => {
     const token = this.getToken();
     if (!token) return false;
-    return !this.isTokenExpired();
+    return true;
   };
 
   private isTokenExpired() {
@@ -72,13 +75,10 @@ export class AuthService {
     if (!token) return true;
     const decoded = jwtDecode(token);
     const isTokenExpired = Date.now() >= decoded['exp']! * 1000;
-    if (isTokenExpired) this.logout();
-    return isTokenExpired;
+    // if (isTokenExpired) this.logout();
+    return true;
   }
 
-  
-
- 
   getRoles = (): string[] | null => {
     const token = this.getToken();
     if (!token) return null;
@@ -90,6 +90,7 @@ export class AuthService {
   logout = (): void => {
     localStorage.removeItem(this.userKey);
   };
+
   getAll = (): Observable<UserDetail[]> =>
     this.http.get<UserDetail[]>(`${this.apiUrl}account`);
 
