@@ -101,13 +101,23 @@ export class AuthService {
   }): Observable<AuthResponse> =>
     this.http.post<AuthResponse>(`${this.apiUrl}account/refresh-token`, data);
 
+  // getToken = (): string | null => {
+  //   const user = localStorage.getItem(this.userKey);
+  //   if (!user) return null;
+  //   const userDetail: AuthResponse = JSON.parse(user);
+  //   return userDetail.token;
+  // };
   getToken = (): string | null => {
-    const user = localStorage.getItem(this.userKey);
-    if (!user) return null;
-    const userDetail: AuthResponse = JSON.parse(user);
-    return userDetail.token;
+    // Check if the code is running in a browser environment
+    if (typeof window!== 'undefined') {
+      const user = localStorage.getItem(this.userKey);
+      if (!user) return null;
+      const userDetail: AuthResponse = JSON.parse(user);
+      return userDetail.token;
+    }
+    return null;
   };
-
+  
   getRefreshToken = (): string | null => {
     const user = localStorage.getItem(this.userKey);
     if (!user) return null;
